@@ -1,0 +1,7 @@
+* text=auto eol=lf
+# Windows batch files need CRLF on disk
+*.bat text eol=crlf
+*.png binary
+*.tga binary
+*.zip binary
+*.msix binary

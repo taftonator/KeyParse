@@ -1,0 +1,11 @@
+## Interface: 120105, 120107
+## Title: KeyParse
+## Notes: Shows a player's average Warcraft Logs M+ parse at a key level on tooltips and Group Finder applicants. Needs the KeyParse companion app.
+## Author: Taftonator-Dalaran
+## Version: 0.6.16
+## SavedVariables: KeyParseDB
+## IconTexture: Interface\AddOns\KeyParse\media\icon
+## X-License: MIT
+## Category: Dungeons & Raids
+
+KeyParse.lua

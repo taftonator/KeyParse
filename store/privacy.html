@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KeyParse Privacy Policy</title>
+<style>
+  :root { --bg: #ffffff; --fg: #1d1b26; --muted: #5d5a6b; --accent: #8a6d1f; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #15131c; --fg: #ece9f4; --muted: #a9a5b8; --accent: #e8c56a; } }
+  body { background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+         margin: 0; padding: 32px 16px; }
+  main { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 1.7rem; margin: 0 0 4px; }
+  h2 { font-size: 1.15rem; margin: 28px 0 6px; color: var(--accent); }
+  .date { color: var(--muted); margin: 0 0 24px; }
+  a { color: var(--accent); }
+  code { font-size: .92em; }
+</style>
+</head>
+<body>
+<main>
+<h1>KeyParse Privacy Policy</h1>
+<p class="date">For the KeyParse World of Warcraft addon and the M+ KeyParse Companion app. Last updated: 19 November 2026.</p>
+
+<h2>Short version</h2>
+<p>KeyParse sends nothing to its developer. There are no accounts, ads, analytics or tracking. The companion
+talks only to Warcraft Logs, using your own Warcraft Logs API key, to look up public Mythic+ rankings.</p>
+
+<h2>What the companion stores on your PC</h2>
+<ul>
+  <li><strong>Your Warcraft Logs API client ID and secret</strong> and the path to your World of Warcraft folder, in
+      <code>config.json</code>. They stay on your PC and are only ever sent to Warcraft Logs to sign in.</li>
+  <li><strong>Lookup results</strong> (public ranking numbers for characters you looked up), in <code>cache.json</code>
+      and in the KeyParse addon's data files inside your World of Warcraft folder. Results are deleted after 24 hours.</li>
+  <li><strong>A log file</strong> (<code>companion_log.txt</code>) with the companion's own messages and errors, to help you
+      troubleshoot.</li>
+</ul>
+<p>These files are in <code>%LOCALAPPDATA%\KeyParse</code> (for the Microsoft Store version, Windows keeps them in the
+app's own storage). Uninstalling the app removes them.</p>
+
+<h2>What is sent over the internet</h2>
+<p>Only to <a href="https://www.warcraftlogs.com">Warcraft Logs</a> (warcraftlogs.com): your API key to sign in, and
+the names and realms of World of Warcraft characters you asked to look up. Warcraft Logs' own
+<a href="https://www.warcraftlogs.com/privacy">privacy policy</a> applies to those requests.</p>
+
+<h2>What the addon reads in game</h2>
+<p>The addon reads character names, realms, classes and roles that World of Warcraft already shows you (group
+applicants, party members, players you right-click) and keeps a list of keys you finished with other players.
+This stays in your World of Warcraft SavedVariables on your PC.</p>
+
+<h2>Children</h2>
+<p>KeyParse does not knowingly collect any personal information from anyone, including children.</p>
+
+<h2>Changes and contact</h2>
+<p>If this policy changes, the new version will be posted on this page with a new date. Questions:
+<a href="mailto:taftonator@gmail.com">taftonator@gmail.com</a>.</p>
+</main>
+</body>
+</html>

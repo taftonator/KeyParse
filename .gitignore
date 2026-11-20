@@ -1,0 +1,27 @@
+# --- Private: never commit ---
+# WCL API key (client_id + client_secret)
+config.json
+# Looked-up player data (WCL terms: no permanent copies)
+cache.json
+probe_output.json
+
+# --- Generated ---
+*_log.txt
+logs/
+__pycache__/
+*.pyc
+.venv/
+build/
+dist/
+*.spec
+*.tmp
+release/
+store/out/
+*.msix
+*.zip
+
+# --- Local tool settings ---
+.claude/settings.local.json
+.vscode/
+Thumbs.db
+desktop.ini

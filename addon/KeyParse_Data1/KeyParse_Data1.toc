@@ -1,0 +1,11 @@
+## Interface: 120105, 120107
+## Title: KeyParse Data 1
+## Notes: Part of KeyParse. Filled in by the KeyParse companion app. Keep enabled.
+## Author: Taftonator-Dalaran
+## Version: 0.6.16
+## LoadOnDemand: 1
+## IconTexture: Interface\AddOns\KeyParse\media\icon
+## Dependencies: KeyParse
+## Category: Dungeons & Raids
+
+Data.lua
