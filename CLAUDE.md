@@ -222,7 +222,9 @@ decided against it, don't re-propose).
 - **NEXT (Store):** (1) DONE: identity.json filled (Name taftonator.MKeyParseCompanion, Store ID 9NZ96JDM66PT,
   PFN ..._mfmz6hgt608aw); `store\out\KeyParseCompanion_0.6.13.0_x64.msix` packed (12.7 MB), not uploaded yet.
   (2) DONE 2026-11-19: local test (`Add-AppxPackage -Register store\build\layout\AppxManifest.xml`) starts and
-  shows in Settings > Apps > Startup. User removes it before the Store install: `Get-AppxPackage *KeyParse* | Remove-AppxPackage`.
+  shows in Settings > Apps > Startup. 2026-11-20: test copy removed, real Store version installed (SignatureKind Store,
+  runs from WindowsApps). It reuses the existing %LOCALAPPDATA%\KeyParse\config.json (real folder, not LocalCache), so
+  it didn't ask for a key. First-run key prompt on a clean PC is untested with the Store build.
   (3) privacy.html contact = taftonator@gmail.com (user's choice, public). Hosting: user's GitHub, Pages from a
   public repo github.com/taftonator/KeyParse (web upload; user is new to GitHub). DONE, live:
   https://taftonator.github.io/KeyParse/privacy.html (repo holds only README + privacy.html). (4) DONE 2026-11-19: submission 1 filled in, all sections Complete (free, all markets, Utilities & tools,
