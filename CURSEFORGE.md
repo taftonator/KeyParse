@@ -63,5 +63,9 @@ WoW addons can't access the internet, so KeyParse needs a small free companion a
 - **Nothing stored long-term.** Results are deleted after 24 hours, as Warcraft Logs' API terms require.
 - **Not affiliated with Warcraft Logs or Blizzard.** Parse data comes from the Warcraft Logs API.
 
+## Feedback
+
+Found a bug, got confused, or have an idea? Tell me in the **2-minute feedback form** (no sign-in, email not collected): https://docs.google.com/forms/d/e/1FAIpQLSeNU-tufRSgHTKupklbQQ1YlSjCZ8FT9VCet0o5vWWukdsjIA/viewform
+
 ---
-Companion app: https://apps.microsoft.com/detail/9NZ96JDM66PT · Privacy policy: https://taftonator.github.io/KeyParse/privacy.html · GitHub: https://github.com/taftonator/KeyParse
+Feedback: https://docs.google.com/forms/d/e/1FAIpQLSeNU-tufRSgHTKupklbQQ1YlSjCZ8FT9VCet0o5vWWukdsjIA/viewform · Companion app: https://apps.microsoft.com/detail/9NZ96JDM66PT · Privacy policy: https://taftonator.github.io/KeyParse/privacy.html · GitHub: https://github.com/taftonator/KeyParse

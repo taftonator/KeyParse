@@ -238,7 +238,10 @@ decided against it, don't re-propose).
   unchanged), MIT, 3rd-party distribution allowed. KeyParse-0.6.16.zip UPLOADED 2026-11-19 as Release (game 12.1.x),
   waiting for CurseForge moderation. CurseForge's description editor showed raw Markdown, so the description is
   pasted as formatted text from `release\CurseForge-description.html` (made from CURSEFORGE.md, not in git;
-  regenerate it when CURSEFORGE.md changes). After approval: change CHANGELOG "not released yet" headers; next uploads use
+  regenerate it when CURSEFORGE.md changes; converter script lived in the session scratchpad, rewrite if lost).
+- **Feedback form (2026-11-20, published):** Google Form "M+ KeyParse feedback" in the user's Drive, 7 questions, no
+  email collected, anyone with the link: https://docs.google.com/forms/d/e/1FAIpQLSeNU-tufRSgHTKupklbQQ1YlSjCZ8FT9VCet0o5vWWukdsjIA/viewform
+  Linked in CURSEFORGE.md ("Feedback" section + footer). Possible later: `/kp feedback` chat link (needs 0.6.17). After approval: change CHANGELOG "not released yet" headers; next uploads use
   the same project (new file, version +0.0.01, rebuild zip only when the user says).
 - **GitHub (2026-11-19):** first commit made (repo-local identity taftonator <194296594+taftonator@users.noreply.github.com>;
   GitHub blocks pushes exposing the private email). PUSHED 2026-11-19 (origin/main = 1c5d112, privacy page still 200).
