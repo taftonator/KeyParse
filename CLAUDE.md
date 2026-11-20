@@ -64,7 +64,8 @@ user through anything they must do themselves.
 - After editing companion.py the user must close and restart the companion window.
 - Don't rebuild release zips until the user says. `build_release.py` takes NO flags: running it at all
   builds (it overwrote the old 0.6.1 zips once by accident). Test 45 dry-runs it with a fake ZipFile.
-  The current `release\KeyParse-0.6.1.zip` is that accidental build (no icon): rebuild before upload.
+  `release\KeyParse-0.6.16.zip` rebuilt 2026-11-19 on the user's OK (10 files, md5 = repo = installed; Data.lua placeholders).
+  It still also writes a KeyParseCompanion zip when companion\dist has the exe: ignore it (companion is Store-only).
 - **Versioning (user's rule):** never near 1.0. Current is 0.6.1 (reset from 0.11.2; 0.7.0-0.11.2 below
   were dev builds). Each update / batch of work done together: +0.0.01 -> 0.6.11, 0.6.12, 0.6.13, ...
   Set `## Version` in ALL FOUR .toc files (KeyParse + Data1-3; build_release.py needs them equal) and add
@@ -230,8 +231,10 @@ decided against it, don't re-propose).
   are addon-only). Future Store updates: bump version (MSIX version must go up), rebuild, new submission.
   Store link: https://apps.microsoft.com/detail/9NZ96JDM66PT (companion's Store files: %LOCALAPPDATA%\Packages  taftonator.MKeyParseCompanion_mfmz6hgt608aw\LocalCache\Local\KeyParse).
 - **CurseForge (started 2026-11-19):** CURSEFORGE.md (the page text), README.md and INSTALL.md rewritten for 0.6.16 +
-  the Store companion (no exe/GitHub-release companion any more). Still to do: rebuild release zip (user says when),
-  user makes a CurseForge account + project and uploads; point the page's GitHub link at the repo once public.
+  the Store companion (no exe/GitHub-release companion any more). CURSEFORGE.md already links the GitHub repo. Zip
+  rebuilt (0.6.16). Still to do: user makes a CurseForge account + project (summary, description from CURSEFORGE.md,
+  Dungeons & Raids, MIT, source link, logo.png 400x400) and uploads the zip; then CurseForge moderation. After
+  approval: change CHANGELOG "not released yet" headers.
 - **GitHub (2026-11-19):** first commit made (repo-local identity taftonator <194296594+taftonator@users.noreply.github.com>;
   GitHub blocks pushes exposing the private email). PUSHED 2026-11-19 (origin/main = 1c5d112, privacy page still 200).
   Repo is public. gh not installed; Git Credential Manager has the login saved. Never push without asking.
