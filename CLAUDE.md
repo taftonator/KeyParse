@@ -233,8 +233,9 @@ decided against it, don't re-propose).
   the Store companion (no exe/GitHub-release companion any more). Still to do: rebuild release zip (user says when),
   user makes a CurseForge account + project and uploads; point the page's GitHub link at the repo once public.
 - **GitHub (2026-11-19):** first commit made (repo-local identity taftonator <194296594+taftonator@users.noreply.github.com>;
-  GitHub blocks pushes exposing the private email). NOT pushed yet; gh not installed, push uses Git Credential Manager
-  browser login. Never push without asking.
+  GitHub blocks pushes exposing the private email). PUSHED 2026-11-19 (origin/main = 1c5d112, privacy page still 200).
+  Repo is public. gh not installed; Git Credential Manager has the login saved. Never push without asking.
+  User is new to git: explain in plain words, no jargon ("send to GitHub" not "push to origin").
 - Options panel: user tested several settings in game 2026-11-19, they work. Quiet chat hides "Parses updated." since
   0.6.15 (user's request). Check 0.11.1 in game: a strong applicant gets
   the star, chat line and taskbar flash after a fetch; the one-number row + icons fit the 68px label.
