@@ -215,6 +215,13 @@ Tier 2: done (group checklist 0.9.0, played-with history 0.10.0).
 Test queue: built in 0.6.14 (see Current state).
 Backburner: coaching page (your weakest dungeons vs your average, season trend; ~10 points per self lookup).
 Future: desktop dashboard from the companion.
+**Companion window (agreed 2026-11-20, user starts it in a new chat):** step 1 = real window replacing the console:
+Status (watching, WCL points left, recent lookups, problems), Setup (WCL Client ID/Secret boxes, WoW folder + Browse,
+Save; replaces console `input()` in `setup()`), tray icon; must pack into the Store MSIX (PyInstaller onedir). Pick the
+toolkit + show a layout before coding. Step 2 later = "Last key" review from WoW's own combat log (WoWCombatLog.txt
+via `/combatlog`: own data, no WCL points, may be kept all season). Then maybe desktop player search, coaching page.
+Never share/pool WCL lookups between users (terms). User drives work from the phone (Remote Control on for all new
+sessions): send screenshots with SendUserFile; WoW tests and Store submissions need the PC.
 Dropped: crown xN for top DPS (needed a report query per run); Raider.IO/rating vs parse note (user
 decided against it, don't re-propose).
 
