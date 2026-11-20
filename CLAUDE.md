@@ -232,8 +232,8 @@ decided against it, don't re-propose).
   Store link: https://apps.microsoft.com/detail/9NZ96JDM66PT (companion's Store files: %LOCALAPPDATA%\Packages  taftonator.MKeyParseCompanion_mfmz6hgt608aw\LocalCache\Local\KeyParse).
 - **CurseForge (started 2026-11-19):** CURSEFORGE.md (the page text), README.md and INSTALL.md rewritten for 0.6.16 +
   the Store companion (no exe/GitHub-release companion any more). CURSEFORGE.md already links the GitHub repo. Zip
-  rebuilt (0.6.16). Still to do: user makes a CurseForge account + project (summary, description from CURSEFORGE.md,
-  Dungeons & Raids, MIT, source link, logo.png 400x400) and uploads the zip; then CurseForge moderation. After
+  rebuilt (0.6.16). CurseForge project CREATED 2026-11-19 as **"M+ KeyParse"** ("KeyParse" was taken; in-game name
+  unchanged), MIT, 3rd-party distribution allowed. Still to do: upload the zip; then CurseForge moderation. After
   approval: change CHANGELOG "not released yet" headers.
 - **GitHub (2026-11-19):** first commit made (repo-local identity taftonator <194296594+taftonator@users.noreply.github.com>;
   GitHub blocks pushes exposing the private email). PUSHED 2026-11-19 (origin/main = 1c5d112, privacy page still 200).
