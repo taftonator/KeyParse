@@ -34,8 +34,9 @@
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png" />
       <Extensions>
-        <!-- Start with Windows. Turned on after the first launch; the user switches it in Settings > Apps > Startup. -->
-        <desktop:Extension Category="windows.startupTask" Executable="KeyParseCompanion.exe" EntryPoint="Windows.FullTrustApplication">
+        <!-- Start with Windows. Turned on after the first launch; the user switches it in Settings > Apps > Startup.
+             KeyParseCompanionStartup.exe is a copy of the main exe: that name makes it start hidden in the tray. -->
+        <desktop:Extension Category="windows.startupTask" Executable="KeyParseCompanionStartup.exe" EntryPoint="Windows.FullTrustApplication">
           <desktop:StartupTask TaskId="KeyParseCompanionStartup" Enabled="true" DisplayName="{{DISPLAY_NAME}}" />
         </desktop:Extension>
       </Extensions>

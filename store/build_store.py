@@ -29,6 +29,10 @@ BUILD = STORE / "build"
 LAYOUT = BUILD / "layout"
 OUT = STORE / "out"
 EXE_NAME = "KeyParseCompanion"
+# Same exe under a second name for the Windows startup task (startup tasks can't pass arguments; the companion
+# starts hidden in the tray when its file name ends in "Startup").
+STARTUP_EXE = EXE_NAME + "Startup"
+UI = ROOT / "companion" / "ui"
 SDK_BIN = Path(r"C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64")
 
 # Hexagon in logo.png (gold outline spans x 103-296, y 38-261), cropped to a square with a transparent outside.
@@ -137,11 +141,13 @@ def run(cmd):
 
 
 def build_exe():
-    """PyInstaller onedir build (a folder, not one big exe: starts faster and the Store expects plain files)."""
+    """PyInstaller onedir build (a folder, not one big exe: starts faster and the Store expects plain files).
+    --windowed: no console window (the companion has its own window and tray icon); ui\ holds the window's page."""
     BUILD.mkdir(parents=True, exist_ok=True)
     ico = BUILD / "KeyParse.ico"
     make_ico(ico)
-    run([sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", "--onedir", "--console",
+    run([sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", "--onedir", "--windowed",
+         "--add-data", f"{UI};ui",
          "--name", EXE_NAME, "--icon", ico, "--distpath", BUILD / "dist", "--workpath", BUILD / "work",
          "--specpath", BUILD, COMPANION])
 
@@ -171,6 +177,7 @@ def main():
     if LAYOUT.exists():
         shutil.rmtree(LAYOUT)
     shutil.copytree(BUILD / "dist" / EXE_NAME, LAYOUT)
+    shutil.copy2(LAYOUT / f"{EXE_NAME}.exe", LAYOUT / f"{STARTUP_EXE}.exe")
     make_assets(LAYOUT / "Assets")
     (LAYOUT / "AppxManifest.xml").write_bytes(render_manifest(ident, version).encode("utf-8"))
     make_pri(LAYOUT)

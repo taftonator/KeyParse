@@ -10,7 +10,10 @@ How it works:
      on the next /reload.
 
 Usage:
-  python companion.py                      watch for in-game requests (default)
+  python companion.py                      open the companion window (status, setup, tray icon) and watch
+  python companion.py --tray               same, but start hidden in the tray (used when Windows starts)
+  python companion.py --console            watch in this console window instead (no window, no tray)
+  python companion.py --preview            show the window without looking anything up (e.g. while another copy runs)
   python companion.py lookup Name-Realm    look players up right now (testing)
   python companion.py setup                re-enter API key / WoW folder
   python companion.py autostart on|off     start (minimized) when you log in to Windows
@@ -27,6 +30,7 @@ from pathlib import Path
 import requests
 
 ADDON = "KeyParse"
+VERSION = "0.6.18"  # same as the addon's .toc files (a test checks it)
 TOKEN_URL = "https://www.warcraftlogs.com/oauth/token"
 API_URL = "https://www.warcraftlogs.com/api/v2/client"
 
@@ -212,14 +216,15 @@ def set_autostart(enabled):
         print("KeyParse companion will no longer start with Windows.")
         return
     if getattr(sys, "frozen", False):        # the .exe build
-        target = f'"{sys.executable}"'
-    else:                                     # running from companion.py
-        pyw = Path(sys.executable)
-        target = f'"{pyw}" "{Path(__file__).resolve()}"'
+        target = f'"{sys.executable}" --tray'
+    else:                                     # running from companion.py: pythonw = no console window
+        pyw = Path(sys.executable).with_name("pythonw.exe")
+        pyw = pyw if pyw.exists() else Path(sys.executable)
+        target = f'"{pyw}" "{Path(__file__).resolve()}" --tray'
     path.write_text("@echo off\r\n"
-                    "rem Starts the KeyParse companion minimized when you log in. Delete this file to stop that.\r\n"
-                    f'start "KeyParse Companion" /min {target}\r\n', encoding="utf-8")
-    print(f"KeyParse companion will start (minimized) when you log in to Windows.\n  Launcher: {path}")
+                    "rem Starts the KeyParse companion in the tray when you log in. Delete this file to stop that.\r\n"
+                    f'start "" {target}\r\n', encoding="utf-8")
+    print(f"KeyParse companion will start (in the tray) when you log in to Windows.\n  Launcher: {path}")
 
 
 def setup(cfg):
@@ -746,6 +751,20 @@ def read_requests(cfg):
     return found
 
 
+def addon_history(cfg):
+    """The addon's played-with history (KeyParseDB.history) from every WoW account, merged. The Last key page uses it
+    to tell timed from over time (only the game knows; the combat log doesn't say)."""
+    retail = Path(cfg.get("wow_retail_path") or "")
+    players = {}
+    for sv in (retail / "WTF" / "Account").glob(f"*/SavedVariables/{ADDON}.lua"):
+        try:
+            db = LuaReader(sv.read_text(encoding="utf-8", errors="replace")).globals().get("KeyParseDB") or {}
+        except (OSError, ValueError, IndexError):
+            continue
+        players.update(((db.get("history") or {}).get("players")) or {})
+    return {"players": players}
+
+
 def sv_mtime(cfg):
     retail = Path(cfg.get("wow_retail_path") or "")
     times = []
@@ -764,6 +783,234 @@ def refresh_credentials(api):
     if cid and sec and (cid, sec) != (api.client_id, api.client_secret):
         api.client_id, api.client_secret, api.token = cid, sec, None
         log("Using the new API key from config.json.")
+
+
+# ---------------------------------------------------------------- window: status + setup
+# Everything the companion window shows or does, as plain functions (companion_ui.py only draws it; tests use these).
+
+STATUS = {"watching": False, "last_check": 0, "error": "", "error_at": 0}
+NUDGE = threading.Event()  # set by Save in the window: re-check requests right away with the new settings
+KEY_PAGE = "https://www.warcraftlogs.com/api/clients"
+LOOKUP_POINTS = 10  # about what one player lookup costs
+
+
+def wow_folder_check(path):
+    """Is this the WoW _retail_ folder, with the addon in it? Returns {ok, level, text, path}; level is
+    good/warn/bad. The World of Warcraft folder itself is accepted and turned into its _retail_ folder."""
+    path = str(path or "").strip().strip('"')
+    if not path:
+        return {"ok": False, "level": "bad", "text": "Pick your World of Warcraft _retail_ folder.", "path": ""}
+    p = Path(path)
+    if not p.is_dir():
+        return {"ok": False, "level": "bad", "text": "That folder doesn't exist.", "path": path}
+    if p.name.lower() != "_retail_" and (p / "_retail_").is_dir():
+        p = p / "_retail_"
+    if not ((p / "Interface").is_dir() and (p / "WTF").is_dir()):
+        return {"ok": False, "level": "bad", "path": str(p),
+                "text": "That isn't WoW's _retail_ folder (it has no Interface and WTF folders)."}
+    addons = p / "Interface" / "AddOns"
+    if not (addons / ADDON).is_dir():
+        return {"ok": True, "level": "warn", "path": str(p),
+                "text": "Found WoW, but the KeyParse addon isn't installed there yet."}
+    if not any((addons / f"{ADDON}_Data{i}").is_dir() for i in range(1, DATA_SLOTS + 1)):
+        return {"ok": True, "level": "warn", "path": str(p),
+                "text": "Found WoW, but the KeyParse_Data folders are missing: reinstall the addon."}
+    return {"ok": True, "level": "good", "text": "Found WoW and the KeyParse addon.", "path": str(p)}
+
+
+def setup_info(cfg):
+    """What the Setup page starts with. The secret itself is never sent to the page, only whether there is one."""
+    path = cfg.get("wow_retail_path") or str(find_wow_retail() or "")
+    return {"client_id": cfg.get("client_id", ""), "has_secret": bool(cfg.get("client_secret")),
+            "wow_path": path, "wow": wow_folder_check(path), "key_page": KEY_PAGE}
+
+
+def save_setup(cfg, client_id, client_secret, wow_path, path=None):
+    """Save the Setup page into config.json (and into cfg, which the watcher shares). An empty secret keeps the
+    saved one. Returns {ok, text, wow}."""
+    client_id = str(client_id or "").strip()
+    client_secret = str(client_secret or "").strip() or cfg.get("client_secret", "")
+    wow = wow_folder_check(wow_path)
+    if not client_id or not client_secret:
+        return {"ok": False, "text": "Fill in both the Client ID and the Client Secret.", "wow": wow}
+    if not wow["ok"]:
+        return {"ok": False, "text": wow["text"], "wow": wow}
+    new = dict(cfg, client_id=client_id, client_secret=client_secret, wow_retail_path=wow["path"])
+    try:
+        save_json(path or CONFIG_PATH, new)
+    except OSError as exc:
+        return {"ok": False, "text": f"Couldn't save ({exc.__class__.__name__}).", "wow": wow}
+    cfg.clear()
+    cfg.update(new)
+    if PROBLEM["text"] == AUTH_PROBLEM:
+        PROBLEM["text"] = ""  # a new key: the watcher tries it straight away (NUDGE) and says so if it's still wrong
+    NUDGE.set()
+    return {"ok": True, "text": "Saved.", "wow": wow}
+
+
+def test_key(client_id, client_secret, cfg=None):
+    """Ask Warcraft Logs whether this client ID/secret works (costs no lookup points). Empty secret = the saved one."""
+    client_secret = str(client_secret or "").strip() or (cfg or {}).get("client_secret", "")
+    client_id = str(client_id or "").strip()
+    if not client_id or not client_secret:
+        return {"ok": False, "text": "Fill in both the Client ID and the Client Secret first."}
+    api = WCL(client_id, client_secret)
+    try:
+        data = api.query("query { rateLimitData { limitPerHour pointsSpentThisHour pointsResetIn } }")
+    except AuthError:
+        return {"ok": False, "text": "Warcraft Logs says this key is wrong. Copy both parts again."}
+    except TransientError as exc:
+        return {"ok": False, "text": f"Couldn't reach Warcraft Logs right now ({exc}). Try again in a minute."}
+    except PermanentError as exc:
+        return {"ok": False, "text": f"Warcraft Logs answered with an error: {exc}"}
+    rl = data.get("rateLimitData") or {}
+    if rl:
+        left = int(rl["limitPerHour"] - rl["pointsSpentThisHour"])
+        return {"ok": True, "text": f"Key works · {left} points left this hour"}
+    return {"ok": True, "text": "Key works"}
+
+
+def player_summary(p):
+    """One line for the window's Recent lookups: main role, and the run-weighted average of their top three
+    key levels (like the addon's row number at their own key). kind: parse / nodps / missing / error."""
+    if p.get("error"):
+        return {"kind": "error", "text": "lookup failed, retrying"}
+    if p.get("missing"):
+        return {"kind": "missing", "text": "no logs this season"}
+    roles = p.get("roles") or {}
+    best = None
+    for role, by_key in roles.items():
+        runs = sum(v[0] for v in by_key.values())
+        if by_key and (best is None or runs > best[1]):
+            best = (role, runs)
+    if not best:
+        return {"kind": "nodps", "text": "only healer logs"}
+    role = best[0]
+    by_int = {int(k): v for k, v in roles[role].items()}
+    top = [k for k in sorted(by_int) if k >= max(by_int) - 2]
+    n = sum(by_int[k][0] for k in top)
+    avg = sum(by_int[k][0] * by_int[k][1] for k in top) / n
+    rng = f"+{top[0]}" if top[0] == top[-1] else f"+{top[0]}–{top[-1]}"
+    return {"kind": "parse", "role": "Tank" if role == "tank" else "DPS", "parse": int(avg), "keys": rng,
+            "runs": n, "spec": p.get("spec") or ""}
+
+
+def ago(seconds):
+    s = max(0, int(seconds))
+    if s < 60:
+        return "just now"
+    if s < 3600:
+        return f"{s // 60} min"
+    if s < 86400:
+        return f"{s // 3600} hr"
+    return f"{s // 86400} d"
+
+
+WOW_EXES = {"wow.exe", "wowt.exe", "wowb.exe"}  # live, PTR, beta (retail only: KeyParse isn't a Classic addon)
+_wow_seen = {"at": 0, "on": False}
+
+
+def wow_running():
+    """Is World of Warcraft open? Checked at most every 3 seconds (Windows' process list, no extra programs)."""
+    if time.time() - _wow_seen["at"] < 3:
+        return _wow_seen["on"]
+    on = False
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        class PROCESSENTRY32W(ctypes.Structure):
+            _fields_ = [("dwSize", wintypes.DWORD), ("cntUsage", wintypes.DWORD), ("th32ProcessID", wintypes.DWORD),
+                        ("th32DefaultHeapID", ctypes.c_void_p), ("th32ModuleID", wintypes.DWORD),
+                        ("cntThreads", wintypes.DWORD), ("th32ParentProcessID", wintypes.DWORD),
+                        ("pcPriClassBase", ctypes.c_long), ("dwFlags", wintypes.DWORD),
+                        ("szExeFile", ctypes.c_wchar * 260)]
+        k = ctypes.windll.kernel32
+        k.CreateToolhelp32Snapshot.restype = wintypes.HANDLE
+        snap = k.CreateToolhelp32Snapshot(0x2, 0)  # TH32CS_SNAPPROCESS
+        entry = PROCESSENTRY32W()
+        entry.dwSize = ctypes.sizeof(entry)
+        ok = k.Process32FirstW(snap, ctypes.byref(entry))
+        while ok:
+            if entry.szExeFile.lower() in WOW_EXES:
+                on = True
+                break
+            ok = k.Process32NextW(snap, ctypes.byref(entry))
+        k.CloseHandle(snap)
+    except Exception:
+        on = True  # can't tell: don't show a false "WoW isn't running"
+    _wow_seen.update(at=time.time(), on=on)
+    return on
+
+
+def wcl_character_url(cache, name, realm):
+    """The player's Warcraft Logs page (region and realm spelling from the realm list the lookups already loaded)."""
+    from urllib.parse import quote
+    key = realm.replace(" ", "").lower()
+    servers = cache.get("servers") or {}
+    region = next((r for r, m in servers.items() if key in (m or {})), "us")
+    slug = (servers.get(region) or {}).get(key) or re.sub(r"[^a-z0-9-]", "", realm.lower().replace(" ", "-"))
+    return f"https://www.warcraftlogs.com/character/{region}/{quote(slug)}/{quote(name.lower())}"
+
+
+def status_snapshot(cache, cfg, now=None, api=None, wow_on=None):
+    """Everything the Status page shows, as plain data."""
+    now = now or time.time()
+    players = list((cache.get("players") or {}).items())
+    recent = []
+    for full, p in sorted(players, key=lambda kv: kv[1].get("t", 0), reverse=True)[:6]:
+        name, _, realm = full.partition("-")
+        recent.append(dict(player_summary(p), name=name, realm=realm, ago=ago(now - p.get("t", now)),
+                           wcl=wcl_character_url(cache, name, realm)))
+    midnight = time.mktime(time.localtime(now)[:3] + (0, 0, 0, 0, 0, -1))
+    today = sorted((p for _, p in players if p.get("t", 0) >= midnight), key=lambda p: p.get("t", 0))
+    bars = [s["parse"] for s in (player_summary(p) for p in today) if s["kind"] == "parse"][-12:]
+
+    with _points_lock:
+        pts = dict(POINTS) or dict(cache.get("points") or {})
+    points = None
+    if pts.get("limit"):
+        limit = int(pts["limit"])
+        reset_in = int(pts.get("reset", 0) - now)
+        spent = pts.get("spent", 0) if reset_in > 0 else 0  # the hour has rolled over: full again
+        left = max(0, int(limit - spent))
+        points = {"left": left, "limit": limit, "reset_in": max(0, reset_in),
+                  "reset_text": (f"Refills in {ago(reset_in)}" if reset_in >= 60 else "Refills in under a minute")
+                  if reset_in > 0 else "Full",
+                  "lookups": max(0, (left - RATE_LIMIT_BUFFER) // LOOKUP_POINTS)}
+
+    problems = []
+    if not (cfg.get("client_id") and cfg.get("client_secret")):
+        problems.append({"level": "bad", "text": "Add your Warcraft Logs key on the Setup page.", "setup": True})
+    wow = wow_folder_check(cfg.get("wow_retail_path"))
+    if wow["level"] != "good":
+        problems.append({"level": wow["level"], "text": wow["text"], "setup": wow["level"] == "bad"})
+    if PROBLEM["text"]:
+        problems.append({"level": "bad", "text": "Warcraft Logs rejected your key. Check it on the Setup page.",
+                         "setup": True})
+    if PAUSED["until"] > now:
+        problems.append({"level": "warn", "text": "Warcraft Logs is busy (database limit). "
+                         f"Retrying every {DB_LIMIT_RECHECK // 60} min, nothing to do."})
+    if api is not None and getattr(api, "paused_until", 0) > now and api.pause_msg == "hourly API limit reached":
+        problems.append({"level": "warn", "text": "Hourly Warcraft Logs points used up. Waiting lookups go "
+                         f"through in {ago(api.paused_until - now)}."})
+    if STATUS["error"]:
+        problems.append({"level": "warn", "text": STATUS["error"], "log": True})
+
+    if any(pr["level"] == "bad" for pr in problems):
+        state = {"level": "bad", "title": "Needs setup" if any(pr.get("setup") for pr in problems) else "Stopped"}
+    elif STATUS.get("preview"):
+        state = {"level": "warn", "title": "Preview only"}  # --preview: window without lookups
+    elif not STATUS["watching"]:
+        state = {"level": "warn", "title": "Starting…"}
+    elif not (wow_running() if wow_on is None else wow_on):
+        state = {"level": "bad", "title": "WoW isn't running"}  # the user's choice: red while the game is closed
+    else:
+        state = {"level": "warn" if problems else "good", "title": "Watching WoW"}
+    last = max((p.get("t", 0) for _, p in players), default=0)
+    return {"version": VERSION, "state": state, "watching": STATUS["watching"], "points": points,
+            "recent": recent, "today": len(today), "bars": bars, "problems": problems,
+            "wow_path": cfg.get("wow_retail_path", ""), "last_lookup": ago(now - last) if last else ""}
 
 
 # ---------------------------------------------------------------- main loops
@@ -859,18 +1106,23 @@ def pending_requests(cfg, cache):
     return todo
 
 
-def watch(api, cfg, cache):
-    log(f"Watching for {ADDON} requests in {cfg.get('wow_retail_path')}\\WTF ... (Ctrl+C to stop)")
+def watch(api, cfg, cache, stop=None):
+    """Check for in-game requests until `stop` (a threading.Event) is set. The window's Save sets NUDGE to
+    re-check straight away with the new settings."""
+    log(f"Watching for {ADDON} requests in {cfg.get('wow_retail_path')}\\WTF ...")
     write_data_lua(cfg, cache, done=True)  # restore data in case the addon was reinstalled/updated
     last = None  # None: check for requests straight away
     retry_at = 0
     failures = 0
-    while True:
+    STATUS.update(watching=True, error="", error_at=0)
+    while not (stop and stop.is_set()):
+        STATUS["last_check"] = time.time()
         # Nothing in here may stop the companion: it often runs minimized from Windows startup, where a
         # crash would go unseen. Unexpected errors are logged with a traceback and retried with a backoff.
         try:
             m = sv_mtime(cfg)
-            due = retry_at and time.time() >= retry_at
+            due = (retry_at and time.time() >= retry_at) or NUDGE.is_set()
+            NUDGE.clear()
             if m != last or due:
                 if last is not None and m != last:
                     time.sleep(0.2)  # let WoW finish writing the file
@@ -885,12 +1137,29 @@ def watch(api, cfg, cache):
                 else:
                     retry_at = 0
             failures = 0
+            if STATUS["error"] and time.time() - STATUS["error_at"] > 60:
+                STATUS["error"] = ""
         except Exception:
             failures += 1
             wait = min(300, 15 * failures)
             log_exception(f"Something went wrong; the companion keeps running and tries again in {wait}s:")
+            STATUS.update(error=f"Something went wrong (details in the log file); trying again in {wait}s.",
+                          error_at=time.time())
             retry_at = time.time() + wait
         time.sleep(POLL_SECONDS)
+    STATUS["watching"] = False
+
+
+def wants_window(args):
+    """The window (with tray icon) is the normal way to run; the console commands stay for testing."""
+    return not (args and (args[0] in ("lookup", "setup", "autostart") or "--console" in args))
+
+
+def starts_hidden(args, exe=None):
+    """Start in the tray without showing the window: when Windows starts the app. The Store's startup task runs
+    KeyParseCompanionStartup.exe (a copy of the main exe, because startup tasks can't pass arguments)."""
+    exe = Path(exe or sys.executable)
+    return "--tray" in args or (exe.suffix.lower() == ".exe" and exe.stem.lower().endswith("startup"))
 
 
 def main():
@@ -900,6 +1169,11 @@ def main():
         log(f"Moved {', '.join(moved)} to {DATA_DIR} (where the companion keeps its files from now on).")
     if args and args[0] == "autostart":
         set_autostart(len(args) < 2 or args[1].lower() != "off")
+        return
+    if wants_window(args):
+        import companion_ui
+        page = next((a.split("=", 1)[1] for a in args if a.startswith("--page=")), None)  # e.g. --page=setup
+        companion_ui.run(sys.modules[__name__], hidden=starts_hidden(args), page=page, preview="--preview" in args)
         return
     cfg = load_config(force_setup=bool(args) and args[0] == "setup")
     if args and args[0] == "setup":
@@ -946,8 +1220,16 @@ if __name__ == "__main__":
         # Couldn't even start (e.g. config.json unreadable). Log why and keep the window open so it can be read:
         # the .exe's console would otherwise close instantly.
         log_exception("The KeyParse companion stopped because of an error:")
-        try:
-            input("\nPress Enter to close this window.")
-        except EOFError:
-            pass
+        if sys.stdin is None:  # the windowed app has no console: say it in a message box instead
+            try:
+                import ctypes
+                ctypes.windll.user32.MessageBoxW(None, f"The KeyParse companion stopped because of an error.\n"
+                                                 f"Details are in {LOG_PATH}", "M+ KeyParse Companion", 0x10)
+            except Exception:
+                pass
+        else:
+            try:
+                input("\nPress Enter to close this window.")
+            except (EOFError, RuntimeError):
+                pass
         sys.exit(1)

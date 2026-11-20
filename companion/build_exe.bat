@@ -4,9 +4,9 @@ cd /d "%~dp0"
 set PY=%LOCALAPPDATA%\Programs\Python\Python312\python.exe
 (
 echo === install build tools ===
-"%PY%" -m pip install --disable-pip-version-check --quiet pyinstaller requests
+"%PY%" -m pip install --disable-pip-version-check --quiet pyinstaller -r requirements.txt
 echo === build ===
-"%PY%" -m PyInstaller --noconfirm --clean --onefile --console --name KeyParseCompanion --distpath dist --workpath build --specpath build companion.py
+"%PY%" -m PyInstaller --noconfirm --clean --onefile --windowed --add-data "ui;ui" --name KeyParseCompanion --distpath dist --workpath build --specpath build companion.py
 echo build exit code %errorlevel%
 echo === smoke test: look up one player with the exe, using your key in %%LOCALAPPDATA%%\KeyParse ===
 dist\KeyParseCompanion.exe lookup Taftonator-Dalaran

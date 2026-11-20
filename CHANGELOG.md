@@ -3,6 +3,26 @@
 > **Version numbers reset to 0.6.1.** Everything listed below from 0.7.0 to 0.11.2 was a development build
 > and now ships as 0.6.1. From here each update goes up by 0.0.01: 0.6.11, 0.6.12, 0.6.13, ...
 
+## 0.6.18 (not released yet)
+- **Last key page** in the companion window: your most recent Mythic+ key, read from WoW's own combat log on your PC (`Logs\WoWCombatLog-*.txt`, written while `/combatlog` or the Warcraft Logs uploader is logging). Uses no Warcraft Logs points and nothing leaves your PC.
+  - Dungeon, key level, time, and **Timed / Over time** (from the addon's own record of the key, after your next reload), plus bosses, deaths and kicks.
+  - Timeline of the run: when each boss died (and wipes), how long each fight took, and when people died.
+  - Group table: damage (pets count for their owner) and damage per second, healing, kicks, deaths, damage taken. Your row is marked YOU.
+  - Deaths: when, who, and the hit that killed them. Your damage by spell (top 8).
+  - A key that's still going shows what's logged so far; press Refresh to update. A big log takes a few seconds to read; a finished key is remembered so it opens instantly next time.
+- **Status:** the dot is green "Watching WoW" while WoW is open and red "WoW isn't running" while it's closed (the companion keeps running either way).
+- **Recent lookups:** names show as Name-Realm and can be selected and copied. Hover a row for a **Warcraft Logs ↗** link to that player's page.
+
+## 0.6.17 (not released yet)
+- **Companion window** (replaces the black console window). Dark purple, in the KeyParse logo's colours.
+  - **Status page:** whether it's watching WoW, Warcraft Logs points left (ring, about how many lookups that is, when it refills), lookups today (bars in parse colours), the last 6 lookups (name, realm, spec, role, average of their top three key levels in Warcraft Logs colours) and any problems, each with what to do ("Open Setup", "Open the log file").
+  - **Setup page** (replaces typing into the console): Client ID and Secret boxes (the saved secret is never shown; leave it empty to keep it), **Test key** (asks Warcraft Logs, costs no lookup points), WoW folder with **Browse…** and a check that it's the `_retail_` folder with the addon in it, link to Windows' Startup settings, **Save**. A new key is used straight away.
+  - **Tray icon:** closing the window keeps the companion running in the tray (it says so the first time). Click the icon to open the window; right-click for its status and **Quit**. When Windows starts it, it starts quietly in the tray. Opening it again from the Start menu brings up the running one. If an older companion (black console window) is still running, it says so instead of closing silently.
+  - First run on a new PC opens straight on the Setup page.
+  - Console mode still exists for testing: `python companion.py --console`, plus `lookup` / `setup`.
+- Store package: the window is packed in (it uses Edge WebView2, which is built into Windows 11). The download grows from about 13 MB to about 27 MB.
+- No addon changes (version bumped with the companion).
+
 ## 0.6.16 (not released yet)
 - **Player search** (`/kp search Name-Realm`, realm optional = yours; `/kp search` alone reopens the window): everything KeyParse knows about one player in its own window, so you don't need the Warcraft Logs site.
   - Every key level (avg, runs; dim = fewer runs than your minimum). Click one to see its dungeons: avg parse, runs, and fastest run vs the timer (green = timed, red = over), plus "timed X of Y".

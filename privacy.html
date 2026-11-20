@@ -20,7 +20,7 @@
 <body>
 <main>
 <h1>KeyParse Privacy Policy</h1>
-<p class="date">For the KeyParse World of Warcraft addon and the M+ KeyParse Companion app. Last updated: 19 November 2026.</p>
+<p class="date">For the KeyParse World of Warcraft addon and the M+ KeyParse Companion app. Last updated: 20 November 2026.</p>
 
 <h2>Short version</h2>
 <p>KeyParse sends nothing to its developer. There are no accounts, ads, analytics or tracking. The companion
@@ -32,11 +32,19 @@ talks only to Warcraft Logs, using your own Warcraft Logs API key, to look up pu
       <code>config.json</code>. They stay on your PC and are only ever sent to Warcraft Logs to sign in.</li>
   <li><strong>Lookup results</strong> (public ranking numbers for characters you looked up), in <code>cache.json</code>
       and in the KeyParse addon's data files inside your World of Warcraft folder. Results are deleted after 24 hours.</li>
+  <li><strong>A summary of your last Mythic+ key</strong> (<code>lastkey.json</code>): the numbers shown on the
+      companion's Last key page, read from your own combat log (see below).</li>
   <li><strong>A log file</strong> (<code>companion_log.txt</code>) with the companion's own messages and errors, to help you
       troubleshoot.</li>
 </ul>
 <p>These files are in <code>%LOCALAPPDATA%\KeyParse</code> (for the Microsoft Store version, Windows keeps them in the
 app's own storage). Uninstalling the app removes them.</p>
+
+<h2>What the companion reads on your PC</h2>
+<p>The KeyParse addon's saved settings file in your World of Warcraft folder (for lookup requests and the keys you
+finished), and World of Warcraft's own combat log files (<code>Logs\WoWCombatLog-*.txt</code>, written while combat
+logging is on) to show your most recent key on the Last key page. These are only read on your PC and are never sent
+anywhere.</p>
 
 <h2>What is sent over the internet</h2>
 <p>Only to <a href="https://www.warcraftlogs.com">Warcraft Logs</a> (warcraftlogs.com): your API key to sign in, and

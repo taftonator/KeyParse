@@ -2,7 +2,7 @@
 ## Title: KeyParse Data 3
 ## Notes: Part of KeyParse. Filled in by the KeyParse companion app. Keep enabled.
 ## Author: Taftonator-Dalaran
-## Version: 0.6.16
+## Version: 0.6.18
 ## LoadOnDemand: 1
 ## IconTexture: Interface\AddOns\KeyParse\media\icon
 ## Dependencies: KeyParse

@@ -41,7 +41,8 @@ user through anything they must do themselves.
   - `addon\KeyParse_Data1..3\Data.lua`: placeholders in the repo; the installed copies hold live
     companion output, so they differ from the repo on purpose.
   - `companion\companion.py` (+ "Start KeyParse Companion.bat", "Start with Windows - ON/OFF.bat",
-    `build_exe.bat` -> `dist\KeyParseCompanion.exe`)
+    `build_exe.bat` -> `dist\KeyParseCompanion.exe`). Window (0.6.17): `companion\companion_ui.py` (pywebview + pystray) +
+    `companion\ui\index.html` (page, all CSS/JS inline) + `ui\hex.png`; `companion\lastkey.py` (combat log reader). Deps in `companion\requirements.txt`.
   - `store\`: `build_store.py` (Store MSIX: onedir exe, logos, manifest, PRI, pack; `--skip-exe` reuses the exe),
     `AppxManifest.template.xml`, `identity.json` (Partner Center values; not secret), `privacy.html`,
     `make_store_art.py` (redraws logo.png sharp, Verdana Bold, -> `listing\` Box/Poster art), `listing\listing.md` (Store text).
@@ -49,7 +50,7 @@ user through anything they must do themselves.
   - `build_release.py/.bat` -> `release\*.zip`; README.md, CURSEFORGE.md, INSTALL.md, CHANGELOG.md,
     LICENSE (MIT), API_FINDINGS.md
   - `tests\harness.py` + `tests\edge_tests.py`: run `python tests\edge_tests.py` (needs `pip install lupa`).
-    Real KeyParse.lua runs against stubbed WoW APIs; companion against a fake WCL. 51 tests, all pass. Test 43 stubs Blizzard Settings (SETTINGS_STUB).
+    Real KeyParse.lua runs against stubbed WoW APIs; companion against a fake WCL. 54 tests, all pass. Test 43 stubs Blizzard Settings (SETTINGS_STUB).
     Stub frames return a no-op FUNCTION for any unknown field (check `type(x) == "table"`, not truthiness). `UIParent` is a
     stub frame; menu stub has CreateCheckbox (LASTBTN[text] = setter). Test 45 only dry-runs ("Wrote release\...zip" is printed, nothing written).
     Applicant stub entries are `{ name, role, specID, classFile }`; PARTY/SELF [4] = class (UnitClass).
@@ -93,7 +94,7 @@ user through anything they must do themselves.
 - Blizzard UI source for checking: github.com/Gethe/wow-ui-source (branch `live`), e.g.
   `Interface/AddOns/Blizzard_GroupFinder/Mainline/LFGList.lua`.
 
-## Current state: v0.6.16 (installed + repo, not released; version labels below are dev builds)
+## Current state: v0.6.18 (installed + repo on branch `companion-window`, not released; version labels below are dev builds)
 - Applicants: Parse column in Group Finder (wide mode) with ▼ (key levels -> 8 dungeons); auto-queue +
   "KeyParse: fetch N (reload)" button; Group Finder reopens after the reload.
 - Right-click any player: "Get M+ parses" (queues + auto-reloads, not in combat); tooltips (Shift = all keys).
@@ -208,6 +209,35 @@ user through anything they must do themselves.
   NeedsLookup (Queue + FetchAndReload, `KeyParseDB.search.reopen = {full, at}` -> reopened 1s after login if < 300s,
   says "Fetching..." until the last data slot); recent click never fetches. In combat: queue only. No options button
   (test 49's stub keeps one CreateSettingsButtonInitializer).
+- 0.6.17 (**companion window, step 1**, test 52; user approved the purple design from an Edge-rendered mock-up 2026-11-20):
+  pywebview (Edge WebView2, `gui="edgechromium"`, private_mode) shows `ui\index.html`; JS polls `JsApi.status()` every 2s.
+  Data/logic are plain functions in companion.py section "window: status + setup" (`wow_folder_check`, `setup_info` (never
+  sends the secret), `save_setup` (empty secret keeps the saved one, updates the shared cfg in place, sets `NUDGE`),
+  `test_key` (token + rateLimitData query), `player_summary` (main role, run-weighted avg of top 3 key levels),
+  `status_snapshot`, `STATUS`). `watch(..., stop=Event)`. `main()`: window unless `lookup|setup|autostart|--console`;
+  passes `sys.modules[__name__]` (script runs as __main__!). `--tray` or exe name ending "Startup" = start hidden (manifest
+  startupTask runs `KeyParseCompanionStartup.exe`, a copy made by build_store; startup tasks can't pass args).
+  `--preview` = window only, no watcher/no single-instance (use it while the Store copy runs: auto mode refused stopping
+  the user's Store app). Single instance: port 47613 now listens; a 2nd copy sends "show"; if the
+  holder doesn't listen (old console companion, e.g. Store 0.6.13) -> message box "close the black window first". Close = hide to tray (notify
+  once); tray: Open (default), status line, Quit. Dark title bar via DwmSetWindowAttribute. Tested: real data in preview,
+  packed exe opens (KeyParse icon), Startup exe stays hidden, 2nd copy shows the first. User ran the layout exe 2026-11-20: window
+  + real watcher started, tray Quit works. Points ring glow: SVG viewBox -10 -10 120 120 (+ #glow filter) so the glow isn't
+  clipped square. Not tested: Save/Browse/Test key clicked (functions tested), a lookup through the window, packaged
+  (MSIX) install. Screenshots: shot.py must pick the window by exe (user's copy may share the title). Windows hides new tray icons in the ^ overflow until the user drags them out.
+- 0.6.18 (**Last key page = companion window step 2**, tests 53-54; user asked to build it after step 1 worked in game
+  2026-11-20): `lastkey.py`: `find_last_start` (reads the log backwards in 8 MB chunks), `read_key` (forward to the
+  non-empty CHALLENGE_MODE_END), `last_key` (newest of the 3 newest `Logs\WoWCombatLog*.txt`; finished key cached in
+  DATA_DIR\lastkey.json), `timed_from_history` (addon history run with same map (challengeModeID) + lvl, t within 15 min;
+  `companion.addon_history` reads it from SavedVariables). Log v22 format: fields after "date time-tz  "; spell events have
+  3 spell fields, swings none; then 19 advanced fields (info GUID, owner GUID, ...), amount = field 28+3 / 28, overkill +2;
+  heal overheal +2. COMBATANT_INFO spec = field 25. CHALLENGE_MODE_START: name, instance, challengeModeID, level, [affixes];
+  END: instance, success, level, ms, score?, rating? (only ms/success used). Damage: *_DAMAGE minus overkill, not
+  *_LANDED; pets -> owner via SPELL_SUMMON or advanced owner GUID. "You" = COMBATANT player with flags & 0x1. Real log:
+  Murder Row +16 (206 MB file) read in ~5 s. JsApi.last_key(force) reads in a thread (state reading/ready/none/error),
+  JS polls 0.7 s. Also: `wow_running()` (Toolhelp32 process list, Wow/WowT/WowB.exe, cached 3 s) -> red "WoW isn't
+  running" state (user's request; footer stays "Running"); Recent lookups show selectable "Name-Realm" + hover
+  "Warcraft Logs ↗" (`wcl_character_url`, `JsApi.open_url` only opens warcraftlogs.com).
 - Slash: `/kp` or `/keyparse` options|key|min|auto|wide|reopen|autoreload|pin|sort|group|applicants|fetch|status|test|search
 
 ## Planned features (agreed, NOT built yet; user says when to start, may clarify first)
@@ -215,11 +245,8 @@ Tier 2: done (group checklist 0.9.0, played-with history 0.10.0).
 Test queue: built in 0.6.14 (see Current state).
 Backburner: coaching page (your weakest dungeons vs your average, season trend; ~10 points per self lookup).
 Future: desktop dashboard from the companion.
-**Companion window (agreed 2026-11-20, user starts it in a new chat):** step 1 = real window replacing the console:
-Status (watching, WCL points left, recent lookups, problems), Setup (WCL Client ID/Secret boxes, WoW folder + Browse,
-Save; replaces console `input()` in `setup()`), tray icon; must pack into the Store MSIX (PyInstaller onedir). Pick the
-toolkit + show a layout before coding. Step 2 later = "Last key" review from WoW's own combat log (WoWCombatLog.txt
-via `/combatlog`: own data, no WCL points, may be kept all season). Then maybe desktop player search, coaching page.
+**Companion window:** step 1 BUILT in 0.6.17, step 2 (Last key) BUILT in 0.6.18 (see Current state). Possible later:
+past keys history (own data, may be kept all season), per-boss breakdown. Privacy policy line about the combat log: done 0.6.18. Then maybe desktop player search, coaching page.
 Never share/pool WCL lookups between users (terms). User drives work from the phone (Remote Control on for all new
 sessions): send screenshots with SendUserFile; WoW tests and Store submissions need the PC.
 Dropped: crown xN for top DPS (needed a report query per run); Raider.IO/rating vs parse note (user
@@ -236,8 +263,11 @@ decided against it, don't re-propose).
   public repo github.com/taftonator/KeyParse (web upload; user is new to GitHub). DONE, live:
   https://taftonator.github.io/KeyParse/privacy.html (repo holds only README + privacy.html). (4) DONE 2026-11-19: submission 1 filled in, all sections Complete (free, all markets, Utilities & tools,
   IARC 3+, Desktop only, listing text/art in store\listing\, runFullTrust reason <=400 chars written for non-gamers).
-  PASSED certification 2026-11-19 (0.6.13.0 msix), publishing. Companion code unchanged since 0.6.13 (0.6.14-0.6.16
-  are addon-only). Future Store updates: bump version (MSIX version must go up), rebuild, new submission.
+  PASSED certification 2026-11-19 (0.6.13.0 msix), publishing. 0.6.17 = first companion change since: build_store
+  now --windowed + `--add-data companion\ui;ui` + Startup exe copy; `store\out\KeyParseCompanion_0.6.17.0_x64.msix`
+  packed (26.8 MB), then 0.6.18.0 (26.8 MB, packed exe shows Last key OK), NOT uploaded. 2026-11-20 for the update: privacy.html (both copies) now lists lastkey.json + reading the
+  combat log/SavedVariables locally (live only after it's sent to GitHub); listing.md has new description, features,
+  "What's new" text and a 367-char runFullTrust note (ask first; listing text may need a line about the new window). Future Store updates: bump version (MSIX version must go up), rebuild, new submission.
   Store link: https://apps.microsoft.com/detail/9NZ96JDM66PT (companion's Store files: %LOCALAPPDATA%\Packages  taftonator.MKeyParseCompanion_mfmz6hgt608aw\LocalCache\Local\KeyParse).
 - **CurseForge (started 2026-11-19):** CURSEFORGE.md (the page text), README.md and INSTALL.md rewritten for 0.6.16 +
   the Store companion (no exe/GitHub-release companion any more). CURSEFORGE.md already links the GitHub repo. Zip
