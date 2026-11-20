@@ -138,14 +138,14 @@ user through anything they must do themselves.
   ...", no KeyParse prefix). Hidden lines collapse. Was next to the title: would clip into longer titles.
 - 0.9.2: search list points line alone is plain "WCL points: ..." too (no "KeyParse:"). Rule: WCL points
   are never shown as a KeyParse notice (chat lines are fine: all KeyParse chat is prefixed anyway).
-- 0.10.0 (Tier 2 #2, NOT tested in game): played-with history. User chose: finished keys only (timed/
+- 0.10.0 (Tier 2 #2, tested in game 2026-11-20: works): played-with history. User chose: finished keys only (timed/
   depleted, no abandoned), tooltip only (no row marker), cleared each season, shown on applicant +
   mouseover + search-leader tooltips (all go through `AddLines` = `AddParseLines` + `AddHistoryLines`).
   CHALLENGE_MODE_COMPLETED -> `RecordCompletedKey` (C_ChallengeMode.GetChallengeCompletionInfo: members
   {memberGUID, name}, onTime, practiceRun skipped, dedupe by map:level:time) -> `KeyParseDB.history =
   { season, players = { [full] = { n, timed, runs = last 10 {t, map, lvl, timed} } } }`. `History()` clears
   when C_MythicPlus.GetCurrentSeason() (>0) differs. Chat line "remembered this key with N players".
-- 0.11.0 (NOT tested in game): **options panel** (Esc > Options > AddOns > KeyParse, `/kp options`;
+- 0.11.0 (tested in game: works): **options panel** (Esc > Options > AddOns > KeyParse, `/kp options`;
   section "settings panel", `RegisterSettingsPanel` in pcall at PLAYER_LOGIN): Settings.RegisterProxySetting
   per key of KeyParseDB.settings (targetKey slider 0=Auto, minRuns, showInCombat, wide, sort, showChecklist,
   autoQueue, reloadOnLookup, reopen, pin, alertStrong, strongIcon, strongParse slider 50-99, showHistory,
@@ -248,14 +248,13 @@ decided against it, don't re-propose).
   Repo is public. gh not installed; Git Credential Manager has the login saved. Never push without asking.
   User is new to git: explain in plain words, no jargon ("send to GitHub" not "push to origin").
 - Options panel: user tested several settings in game 2026-11-19, they work. Quiet chat hides "Parses updated." since
-  0.6.15 (user's request). Check 0.11.1 in game: a strong applicant gets
-  the star, chat line and taskbar flash after a fetch; the one-number row + icons fit the 68px label.
-- Check 0.10.0 in game: finish a key -> chat "remembered this key with 4 players"; /reload; hover a
-  party member -> "Played with you" lines. Watch for secret-value errors on completion.
+  0.6.15 (user's request).
+- **Confirmed in game 2026-11-20 (user):** strong applicant star + chat line + taskbar flash (0.11.1), played-with
+  history after a key (0.10.0), Show group parses in a party (0.7.2). Don't remind about these any more.
 - 0.9.1 top-right stack confirmed in game 2026-11-19 (screenshot: "Lust x Brez v" over "WCL points: 975/1000 (resets
   in 41 min)", empty notice line collapsed, no overlap). +BL on a real applicant works (user). Update-on-join
   not tested; user accepts it as is (don't ask again).
-- Test 0.7.2 menus in game (Show group parses, Show leader parse, healer handling).
+- Not confirmed in game yet (low priority, don't block): Show leader parse menu, healer handling, weak skull (0.11.2).
 - Options not built yet (possible later): colors, role marker, average vs best, refresh age (<=24h).
 
 ## Saving usage (when to start a new chat)

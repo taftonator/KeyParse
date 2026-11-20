@@ -13,7 +13,7 @@
 ## 0.6.15 (not released yet)
 - **Quiet chat** now also hides "Parses updated." after a fetch. WCL points left are still in `/kp status` and on the Group Finder; warnings and the strong-applicant line still show.
 
-## 0.6.14 (not released yet; not tested in game)
+## 0.6.14 (not released yet)
 - **Test queue** (`/kp test`, or the "Open test queue" button at the bottom of the options panel): try the Parse column, star/skull, `*`, `!`, `+BL`/`+BR`, the tooltip and the sorting without waiting for real applicants.
   - KeyParse's own window, laid over the Premade Groups panel and drawn like the applicant list, clearly marked: "TEST - not real applicants" banner, "KeyParse test queue" title, a faint TEST watermark. It is not Blizzard's list (that can't hold fake applicants, and writing into it would break Invite/Decline).
   - Rows show name (class colour), role icon, ilvl, M+ rating and KeyParse's label, made by exactly the same code as real rows. Hover for the real tooltip (plus "TEST applicant - not real"), ▼ for every key level, click a row to edit it. Invite and Decline just remove the row.
@@ -48,7 +48,7 @@
 ## 0.11.2 (not released yet; not tested in game)
 - **Weak applicants**: a skull in front of an applicant's number when it's below 25 (grey on Warcraft Logs), plus a tooltip line. Only when the key you're pushing is +19 or lower (anyone applying to 20s is assumed good), and only from at least your "runs needed". Turn it off in the options ("Skull on weak applicants").
 
-## 0.11.1 (not released yet; not tested in game)
+## 0.11.1 (not released yet)
 - **Applicant rows show one number**: the average of all their runs from 2 keys below your key up to it (listing +18: every +16, +17 and +18 run together). No more `50/70 +15 (4)` text, which leaves room for the icons (star, `+BL`/`+BR`, `*`, `!`).
   - A grey `-` when they have logs but no runs in that range (with the orange `!`).
   - Hover for what the number is: "avg of 12 DPS runs on +16 to +18". Their dungeon and per-key details are still in the tooltip.
@@ -57,7 +57,7 @@
 - **Strong applicants** now follow that number: star and alert when it's **80 or higher** (adjustable; was 90 on a single key level). A saved 90 from 0.11.0 is moved to 80 once.
 - Search-list and right-click labels are unchanged.
 
-## 0.11.0 (not released yet; not tested in game)
+## 0.11.0 (not released yet)
 - **Options panel**: Esc > Options > AddOns > KeyParse, or `/kp options`. Every `/kp` setting as checkboxes and sliders (key you're pushing, runs needed, Parse column, sorting, auto look-ups, reload/reopen/pin, show in combat), plus new ones:
   - Group checklist on/off, played-with history on/off.
   - **Quiet chat**: skips info-only lines (the sorting note at login, "Fetching N players…", "remembered this key"). Warnings still show.
@@ -70,7 +70,7 @@
 - Clearer message when Warcraft Logs answers "no database points remaining". That limit isn't your hourly points and usually clears within minutes, so it now reads `WCL busy (database limit), retrying every 2 min` (search list and your listing) and "Warcraft Logs is busy (its database limit, not your points)…" in chat, instead of "hourly limit used up, resumes in N min".
 - Companion: re-checks every 2 minutes in that case and no longer counts down to the hourly reset. Restart the companion window to pick this up.
 
-## 0.10.0 (not released yet; not tested in game)
+## 0.10.0 (not released yet)
 - **Played-with history**: every key you finish (timed or depleted; practice runs skipped) is remembered for each player in your group. Their tooltip then shows `Played with you: 2 keys, 1 timed` and your 3 most recent keys together, e.g. `+17 Den of Nalorakk  depleted, 2d ago`.
   - Shows on applicant tooltips, player mouseover tooltips and search-list leader tooltips. Nothing is added to the rows.
   - Saved with your addon settings, so it survives logout and PC shutdown. Cleared when a new M+ season starts. Keys abandoned before the end aren't recorded.
@@ -79,14 +79,14 @@
 ## 0.9.2 (not released yet; not tested in game)
 - Group Finder search list: Warcraft Logs points now read `WCL points: 983/1000 (resets in 49 min)` on their own, no longer prefixed "KeyParse:". KeyParse hints (type 18-18 + Enter, pinned group, etc.) still show on the line above.
 
-## 0.9.1 (not released yet; not tested in game)
+## 0.9.1 (not released yet)
 - Your own listing: the top-right corner of the dungeon picture is now one right-aligned stack, so nothing runs into the title as it gets longer:
   1. `Lust ✓  Brez ✗` (moved here from next to the title)
   2. KeyParse notices, e.g. "KeyParse: 3 lookups waiting (reload to fetch)"
   3. `WCL points: 983/1000 (resets in 49 min)` (no longer prefixed "KeyParse:")
   Empty lines are skipped and the rest move up.
 
-## 0.9.0 (not released yet; not tested in game)
+## 0.9.0 (not released yet)
 - **Group checklist** on your own listing, right after the title: `Lust ✓  Brez ✗`, green when someone in your group brings it, red when nobody does. Worked out from your group's classes (no Warcraft Logs points). Hover it to see which classes count.
   - Bloodlust: Shaman, Mage, Hunter (needs the right pet), Evoker. Battle res: Druid, Death Knight, Warlock, Paladin.
 - Applicants who'd fill a missing one get a green `+BL` or `+BR` in front of their parse, and a line in their tooltip. Updates when someone joins or leaves your group.
