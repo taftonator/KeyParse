@@ -185,6 +185,10 @@ class JsApi:
     def last_key(self, force=False):
         return self._app.last_key(bool(force))
 
+    def copy_text(self, text):
+        """Copy buttons on the Setup page (the page itself isn't allowed to write the clipboard)."""
+        return set_clipboard(str(text)[:500])
+
     def open_url(self, url):
         if str(url).startswith("https://www.warcraftlogs.com/"):  # only Warcraft Logs pages
             webbrowser.open(url)
@@ -226,6 +230,36 @@ class JsApi:
 
     def hide(self):
         self._app.hide()
+
+
+def set_clipboard(text):
+    """Put text on the Windows clipboard. Returns True when it worked."""
+    try:
+        import ctypes
+        from ctypes import wintypes
+        u, k = ctypes.windll.user32, ctypes.windll.kernel32
+        k.GlobalAlloc.restype = wintypes.HGLOBAL
+        k.GlobalLock.restype = ctypes.c_void_p
+        k.GlobalLock.argtypes = [wintypes.HGLOBAL]
+        u.SetClipboardData.argtypes = [wintypes.UINT, wintypes.HANDLE]
+        data = (text + "\0").encode("utf-16-le")
+        for _ in range(5):  # another program may have the clipboard open for a moment
+            if u.OpenClipboard(None):
+                break
+            time.sleep(0.05)
+        else:
+            return False
+        try:
+            u.EmptyClipboard()
+            h = k.GlobalAlloc(0x0002, len(data))  # GMEM_MOVEABLE
+            ptr = k.GlobalLock(h)
+            ctypes.memmove(ptr, data, len(data))
+            k.GlobalUnlock(h)
+            return bool(u.SetClipboardData(13, h))  # CF_UNICODETEXT
+        finally:
+            u.CloseClipboard()
+    except Exception:
+        return False
 
 
 def dark_title_bar(window):

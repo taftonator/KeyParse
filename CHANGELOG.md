@@ -3,6 +3,11 @@
 > **Version numbers reset to 0.6.1.** Everything listed below from 0.7.0 to 0.11.2 was a development build
 > and now ships as 0.6.1. From here each update goes up by 0.0.01: 0.6.11, 0.6.12, 0.6.13, ...
 
+## 0.6.19 (not released yet)
+- **Companion Setup page: step-by-step guide for the Warcraft Logs key** (the first new-player test showed the Warcraft Logs "Create a Client" form is easy to get wrong). Five numbered steps with a button that opens the right page, **Copy** buttons for the Name and Redirect URL boxes, "leave Public Client empty", and how to tell the two codes apart. Shown on a first run; once a key is saved it disappears and the Setup page looks like before (one short line and a link), with a **Show the step-by-step guide** link to open it again. It hides itself again the next time you open Setup.
+- **Catches common key mistakes** before asking Warcraft Logs, in plain words: Client ID and Secret swapped, the same code in both boxes, a space or line break in the middle. Spaces and quotes around a pasted code are removed. When Warcraft Logs rejects a key, it now says what to check.
+- INSTALL.md and the CurseForge page walk through the same steps (the install guide still described the old console window).
+
 ## 0.6.18 (not released yet)
 - **Last key page** in the companion window: your most recent Mythic+ key, read from WoW's own combat log on your PC (`Logs\WoWCombatLog-*.txt`, written while `/combatlog` or the Warcraft Logs uploader is logging). Uses no Warcraft Logs points and nothing leaves your PC.
   - Dungeon, key level, time, and **Timed / Over time** (from the addon's own record of the key, after your next reload), plus bosses, deaths and kicks.

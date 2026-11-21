@@ -50,7 +50,7 @@ user through anything they must do themselves.
   - `build_release.py/.bat` -> `release\*.zip`; README.md, CURSEFORGE.md, INSTALL.md, CHANGELOG.md,
     LICENSE (MIT), API_FINDINGS.md
   - `tests\harness.py` + `tests\edge_tests.py`: run `python tests\edge_tests.py` (needs `pip install lupa`).
-    Real KeyParse.lua runs against stubbed WoW APIs; companion against a fake WCL. 54 tests, all pass. Test 43 stubs Blizzard Settings (SETTINGS_STUB).
+    Real KeyParse.lua runs against stubbed WoW APIs; companion against a fake WCL. 55 tests, all pass. Test 43 stubs Blizzard Settings (SETTINGS_STUB).
     Stub frames return a no-op FUNCTION for any unknown field (check `type(x) == "table"`, not truthiness). `UIParent` is a
     stub frame; menu stub has CreateCheckbox (LASTBTN[text] = setter). Test 45 only dry-runs ("Wrote release\...zip" is printed, nothing written).
     Applicant stub entries are `{ name, role, specID, classFile }`; PARTY/SELF [4] = class (UnitClass).
@@ -94,7 +94,7 @@ user through anything they must do themselves.
 - Blizzard UI source for checking: github.com/Gethe/wow-ui-source (branch `live`), e.g.
   `Interface/AddOns/Blizzard_GroupFinder/Mainline/LFGList.lua`.
 
-## Current state: v0.6.18 (installed + repo on branch `companion-window`, not released; version labels below are dev builds)
+## Current state: v0.6.19 (repo + sent to GitHub 2026-11-20 with the user's OK; tested by the user in the build-folder copy; Store upload of 0.6.19.0 pending; installed addon = CurseForge copy during the new-user test; version labels below are dev builds)
 - Applicants: Parse column in Group Finder (wide mode) with ▼ (key levels -> 8 dungeons); auto-queue +
   "KeyParse: fetch N (reload)" button; Group Finder reopens after the reload.
 - Right-click any player: "Get M+ parses" (queues + auto-reloads, not in combat); tooltips (Shift = all keys).
@@ -238,6 +238,14 @@ user through anything they must do themselves.
   JS polls 0.7 s. Also: `wow_running()` (Toolhelp32 process list, Wow/WowT/WowB.exe, cached 3 s) -> red "WoW isn't
   running" state (user's request; footer stays "Running"); Recent lookups show selectable "Name-Realm" + hover
   "Warcraft Logs ↗" (`wcl_character_url`, `JsApi.open_url` only opens warcraftlogs.com).
+- 0.6.19 (test 55; from the new-user test 2026-11-20, user: "idiot proof"): Setup page `<details id="guide">` (shown
+  only when no key saved; after Save `showGuide(false)` hides it and shows the 0.6.18 link + short line again, user's ask; `#guide-open` link reopens it, `show("setup")` re-hides it while `keySaved`): 5 steps, button -> warcraftlogs.com/api/clients, Copy buttons (`JsApi.copy_text` -> `companion_ui.set_clipboard`,
+  ctypes CF_UNICODETEXT; tests mock it: never touch the real clipboard) for Name `M+ KeyParse Companion - looks up Mythic+
+  parses for my WoW group finder` and `http://localhost`. `clean_key` (strip spaces/quotes), `key_problem` (empty, same code
+  twice, swapped = secret has the client-ID shape 8-4-4-4-12 and the ID doesn't, inner whitespace) used by save_setup +
+  test_key before any request; `key_hint` on AuthError. WCL facts (user's screenshots): client list shows name, Client ID,
+  redirect URL, Edit/Delete; secret not in the list (INSTALL.md says shown only once; user didn't confirm via Edit yet).
+  INSTALL.md rewritten for the window; CURSEFORGE.md + release html updated (not pasted into CurseForge yet).
 - Slash: `/kp` or `/keyparse` options|key|min|auto|wide|reopen|autoreload|pin|sort|group|applicants|fetch|status|test|search
 
 ## Planned features (agreed, NOT built yet; user says when to start, may clarify first)
@@ -265,17 +273,27 @@ decided against it, don't re-propose).
   IARC 3+, Desktop only, listing text/art in store\listing\, runFullTrust reason <=400 chars written for non-gamers).
   PASSED certification 2026-11-19 (0.6.13.0 msix), publishing. 0.6.17 = first companion change since: build_store
   now --windowed + `--add-data companion\ui;ui` + Startup exe copy; `store\out\KeyParseCompanion_0.6.17.0_x64.msix`
-  packed (26.8 MB), then 0.6.18.0 (26.8 MB, packed exe shows Last key OK), NOT uploaded. 2026-11-20 for the update: privacy.html (both copies) now lists lastkey.json + reading the
-  combat log/SavedVariables locally (live only after it's sent to GitHub); listing.md has new description, features,
+  packed (26.8 MB), then 0.6.18.0 (26.8 MB, packed exe shows Last key OK), SUBMITTED 2026-11-20 as Submission 2 (0.6.18.0 replaced 0.6.13.0 under Packages; new listing text; not mandatory),
+  waiting for certification. After it passes: user should quit the build-folder test copy and run the Store app. For the update: privacy.html (both copies) now lists lastkey.json + reading the
+  combat log/SavedVariables locally (live since 2026-11-20); listing.md has new description, features,
   "What's new" text and a 367-char runFullTrust note (ask first; listing text may need a line about the new window). Future Store updates: bump version (MSIX version must go up), rebuild, new submission.
   Store link: https://apps.microsoft.com/detail/9NZ96JDM66PT (companion's Store files: %LOCALAPPDATA%\Packages  taftonator.MKeyParseCompanion_mfmz6hgt608aw\LocalCache\Local\KeyParse).
+- **New-user test (2026-11-20, in progress):** Store 0.6.18.0 PASSED + auto-updated; addon live on CurseForge (0.6.16).
+  User's own setup MOVED (not deleted) to `C:\Users\tafto\KeyParse-backup\` (not Desktop: OneDrive syncs it and
+  config.json has the secret): `companion\` (= %LOCALAPPDATA%\KeyParse) and
+  `SavedVariables\851325204#1\KeyParse.lua(.bak)` (settings + played-with history). Restore = move back (WoW + companion
+  closed). Mistake: the user installed from CurseForge (14:39) BEFORE the move (14:42), so the move took CurseForge's
+  0.6.16 copy; moved back the same day (= CurseForge files, fingerprints match). Lesson: check folder dates/versions
+  before moving, and do the clean-up before the user installs anything. Uninstalling the Store app does NOT remove %LOCALAPPDATA%\KeyParse.
 - **CurseForge (started 2026-11-19):** CURSEFORGE.md (the page text), README.md and INSTALL.md rewritten for 0.6.16 +
   the Store companion (no exe/GitHub-release companion any more). CURSEFORGE.md already links the GitHub repo. Zip
   rebuilt (0.6.16). CurseForge project CREATED 2026-11-19 as **"M+ KeyParse"** ("KeyParse" was taken; in-game name
   unchanged), MIT, 3rd-party distribution allowed. KeyParse-0.6.16.zip UPLOADED 2026-11-19 as Release (game 12.1.x),
   waiting for CurseForge moderation. CurseForge's description editor showed raw Markdown, so the description is
   pasted as formatted text from `release\CurseForge-description.html` (made from CURSEFORGE.md, not in git;
-  regenerate it when CURSEFORGE.md changes; converter script lived in the session scratchpad, rewrite if lost).
+  regenerate it when CURSEFORGE.md changes with `python make_curseforge_html.py` (repo root, added 2026-11-20).
+  2026-11-20: Requirements step 3 now walks through Create Client (descriptive name, http://localhost, Public unticked)
+  after the new-user test showed the WCL form is confusing. Same guide is on the companion's Setup page + INSTALL.md (0.6.19).
 - **Feedback form (2026-11-20, published):** Google Form "M+ KeyParse feedback" in the user's Drive, 7 questions, no
   email collected, anyone with the link: https://docs.google.com/forms/d/e/1FAIpQLSeNU-tufRSgHTKupklbQQ1YlSjCZ8FT9VCet0o5vWWukdsjIA/viewform
   Linked in CURSEFORGE.md ("Feedback" section + footer). Possible later: `/kp feedback` chat link (needs 0.6.17). After approval: change CHANGELOG "not released yet" headers; next uploads use

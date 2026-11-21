@@ -30,7 +30,7 @@ from pathlib import Path
 import requests
 
 ADDON = "KeyParse"
-VERSION = "0.6.18"  # same as the addon's .toc files (a test checks it)
+VERSION = "0.6.19"  # same as the addon's .toc files (a test checks it)
 TOKEN_URL = "https://www.warcraftlogs.com/oauth/token"
 API_URL = "https://www.warcraftlogs.com/api/v2/client"
 
@@ -792,6 +792,35 @@ STATUS = {"watching": False, "last_check": 0, "error": "", "error_at": 0}
 NUDGE = threading.Event()  # set by Save in the window: re-check requests right away with the new settings
 KEY_PAGE = "https://www.warcraftlogs.com/api/clients"
 LOOKUP_POINTS = 10  # about what one player lookup costs
+CLIENT_ID_SHAPE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.I)
+
+
+def clean_key(text):
+    """What people paste: stray spaces, line breaks or quotes around the code."""
+    return str(text or "").strip().strip('"\'').strip()
+
+
+def key_problem(client_id, client_secret):
+    """Copy-paste mistakes that are certain without asking Warcraft Logs, in plain words ("" = none found)."""
+    cid, sec = clean_key(client_id), clean_key(client_secret)
+    if not cid or not sec:
+        return "Fill in both the Client ID and the Client Secret."
+    if cid == sec:
+        return "The same code is in both boxes. The Client ID and the Client Secret are two different codes."
+    if CLIENT_ID_SHAPE.match(sec) and not CLIENT_ID_SHAPE.match(cid):
+        return ("The two codes look swapped: the short one with dashes is the Client ID (left box), "
+                "the long one without dashes is the Client Secret (right box).")
+    if any(ch.isspace() for ch in cid + sec):
+        return "One of the codes has a space or line break in the middle. Copy it again from the Warcraft Logs page."
+    return ""
+
+
+def key_hint(client_id):
+    """Extra advice when Warcraft Logs rejects a key."""
+    if not CLIENT_ID_SHAPE.match(clean_key(client_id)):
+        return (" The Client ID should be the short code with dashes, like 9f3c1a2e-7b44-4d1e-a0c2-5e8f1b6d9a07: "
+                "copy it from under your client's name on the Warcraft Logs page.")
+    return " Copy both codes again. Lost the secret? Delete that client on the Warcraft Logs page and make a new one."
 
 
 def wow_folder_check(path):
@@ -828,11 +857,12 @@ def setup_info(cfg):
 def save_setup(cfg, client_id, client_secret, wow_path, path=None):
     """Save the Setup page into config.json (and into cfg, which the watcher shares). An empty secret keeps the
     saved one. Returns {ok, text, wow}."""
-    client_id = str(client_id or "").strip()
-    client_secret = str(client_secret or "").strip() or cfg.get("client_secret", "")
+    client_id = clean_key(client_id)
+    client_secret = clean_key(client_secret) or cfg.get("client_secret", "")
     wow = wow_folder_check(wow_path)
-    if not client_id or not client_secret:
-        return {"ok": False, "text": "Fill in both the Client ID and the Client Secret.", "wow": wow}
+    problem = key_problem(client_id, client_secret)
+    if problem:
+        return {"ok": False, "text": problem, "wow": wow}
     if not wow["ok"]:
         return {"ok": False, "text": wow["text"], "wow": wow}
     new = dict(cfg, client_id=client_id, client_secret=client_secret, wow_retail_path=wow["path"])
@@ -850,15 +880,16 @@ def save_setup(cfg, client_id, client_secret, wow_path, path=None):
 
 def test_key(client_id, client_secret, cfg=None):
     """Ask Warcraft Logs whether this client ID/secret works (costs no lookup points). Empty secret = the saved one."""
-    client_secret = str(client_secret or "").strip() or (cfg or {}).get("client_secret", "")
-    client_id = str(client_id or "").strip()
-    if not client_id or not client_secret:
-        return {"ok": False, "text": "Fill in both the Client ID and the Client Secret first."}
+    client_secret = clean_key(client_secret) or (cfg or {}).get("client_secret", "")
+    client_id = clean_key(client_id)
+    problem = key_problem(client_id, client_secret)
+    if problem:
+        return {"ok": False, "text": problem}
     api = WCL(client_id, client_secret)
     try:
         data = api.query("query { rateLimitData { limitPerHour pointsSpentThisHour pointsResetIn } }")
     except AuthError:
-        return {"ok": False, "text": "Warcraft Logs says this key is wrong. Copy both parts again."}
+        return {"ok": False, "text": "Warcraft Logs says this key is wrong." + key_hint(client_id)}
     except TransientError as exc:
         return {"ok": False, "text": f"Couldn't reach Warcraft Logs right now ({exc}). Try again in a minute."}
     except PermanentError as exc:

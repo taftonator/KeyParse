@@ -36,7 +36,7 @@ Results deleted after 24 hours, in line with Warcraft Logs' API terms
 No accounts, ads or tracking
 
 ## What's new in this version (Partner Center: Store listing > "What's new in this version")
-New companion window in the KeyParse colours, replacing the black console window: a Status page (watching WoW, Warcraft Logs points left, recent lookups, problems), a Setup page (key, Test key, WoW folder with Browse) and a tray icon. New Last key page: review your most recent Mythic+ key from WoW's own combat log.
+Easier first-time setup: the Setup page now walks you through making your free Warcraft Logs key step by step, with Copy buttons for what to type. It also catches common mistakes (codes swapped, the same code twice, stray spaces) and explains them in plain words. Once your key is saved the guide tucks itself away. Your saved key keeps working after this update.
 
 ## Search terms (max 7)
 World of Warcraft

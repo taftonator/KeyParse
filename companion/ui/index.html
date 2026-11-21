@@ -100,6 +100,22 @@ h1{font-size:24px;font-weight:600;letter-spacing:-.2px}
 .badge.busy{background:rgba(163,91,255,.12);color:#c79bff}
 .badge:empty{display:none}
 .setgrid{grid-template-columns:1fr 1fr}
+.guide{margin-top:10px;border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.18)}
+.guide summary{cursor:pointer;padding:11px 14px;font-weight:600;color:#e6dcff;list-style:none}
+.guide summary::before{content:"\25B8";display:inline-block;margin-right:8px;transition:transform .15s;color:var(--purple)}
+.guide[open] summary::before{transform:rotate(90deg)}
+.guide summary span{font-weight:400;color:var(--dim);font-size:12px}
+.steps{margin:0 14px 14px 40px;font-size:13px;color:var(--dim);line-height:1.55}
+.steps li{padding:6px 0 6px 6px}.steps li::marker{color:var(--gold);font-weight:700}
+.steps b{color:var(--text)}
+.steps code,.fill code{font-family:"Cascadia Mono",Consolas,monospace;font-size:12px;color:#e6dcff;user-select:text;-webkit-user-select:text}
+.do{margin-top:8px}
+.btn.sm{height:30px;padding:0 12px;font-size:12px;border-radius:8px}
+.fill{display:grid;grid-template-columns:110px minmax(0,1fr) auto;gap:10px;align-items:center;margin:6px 0;padding:7px 10px;border-radius:10px;background:rgba(0,0,0,.3);border:1px solid rgba(190,160,255,.14)}
+.fill .k{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.8px;font-weight:600}
+.fill code{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fill .v{color:var(--text)}
+.warn{margin-top:6px;padding:7px 10px;border-radius:10px;background:rgba(255,181,71,.10);color:var(--warn);font-size:12.5px}
 a.link{color:#c79bff;font-size:12px;cursor:pointer}a.link:hover{text-decoration:underline}
 .spin{width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -200,8 +216,23 @@ a.link{color:#c79bff;font-size:12px;cursor:pointer}a.link:hover{text-decoration:
   <!-- SETUP -->
   <section class="page" id="p-setup">
    <h1>Setup</h1><div class="sub">Only needed once. Your key stays on this PC and is never shared.</div>
-   <div class="card"><div style="display:flex;align-items:center"><div class="lbl">Your Warcraft Logs key</div><a class="link" style="margin-left:auto" id="key-page">Get a free key at warcraftlogs.com ↗</a></div>
-    <div class="small" style="margin-top:8px">Click <b>Create Client</b> there, give it any name, use <b>http://localhost</b> as the redirect URL and leave “Public Client” unticked.</div>
+   <div class="card"><div style="display:flex;align-items:center"><div class="lbl">Your Warcraft Logs key</div><a class="link" style="margin-left:auto" id="key-link" hidden>Get a free key at warcraftlogs.com ↗</a></div>
+    <div class="small" style="margin-top:8px" id="key-short" hidden>Click <b>Create Client</b> there, give it any name, use <b>http://localhost</b> as the redirect URL and leave “Public Client” unticked. <a class="link" id="guide-open">Show the step-by-step guide</a></div>
+    <details class="guide" id="guide"><summary>How to get your free key <span>(2 minutes, step by step)</span></summary>
+     <ol class="steps">
+      <li><b>Open the Warcraft Logs key page</b> and sign in. No account? Make a free one there (it's the same account people use to upload logs).
+       <div class="do"><button class="btn sm" id="key-page">Open warcraftlogs.com/api/clients ↗</button></div></li>
+      <li>Click <b>+ Create Client</b> (top right of the “Clients” box).</li>
+      <li><b>Fill in the three boxes</b> exactly like this:
+       <div class="fill"><span class="k">Name</span><code id="g-name">M+ KeyParse Companion - looks up Mythic+ parses for my WoW group finder</code><button class="btn sm copy" data-copy="g-name">Copy</button></div>
+       <div class="fill"><span class="k">Redirect URLs</span><code id="g-url">http://localhost</code><button class="btn sm copy" data-copy="g-url">Copy</button></div>
+       <div class="fill"><span class="k">Public Client</span><span class="v">Leave this box <b>empty</b>. Don't tick it.</span></div>
+       Then click <b>Create</b>.</li>
+      <li><b>Copy both codes into the boxes below.</b> The <b>Client ID</b> is short with dashes (like <code>9f3c1a2e-7b44-…</code>). The <b>Client Secret</b> is a long code with no dashes.
+       <div class="warn">Copy the secret right away. If you lose it, delete that client on the page and make a new one.</div></li>
+      <li>Press <b>Test key</b>. Green means it works. Then press <b>Save</b> at the bottom.</li>
+     </ol>
+    </details>
     <div class="row setgrid">
      <div class="field"><label for="cid">Client ID</label><div class="inp"><input id="cid" spellcheck="false" autocomplete="off" placeholder="Paste the Client ID"></div></div>
      <div class="field"><label for="sec">Client Secret</label><div class="inp"><input id="sec" type="password" spellcheck="false" autocomplete="off" placeholder="Paste the Client Secret"><span class="eye" id="eye">Show</span></div></div>
@@ -236,6 +267,7 @@ const SPEC_CLASS = {Arms:"#c69b6d",Fury:"#c69b6d",Retribution:"#f48cba",Holy:nul
 function show(page){
   if (!["status", "setup", "lastkey"].includes(page)) page = "status";
   if (page === "lastkey") loadLastKey(false);
+  if (page === "setup" && keySaved) showGuide(false);
   for (const p of ["status", "setup", "lastkey"]) { $("p-" + p).classList.toggle("on", p === page); $("n-" + p).classList.toggle("on", p === page); }
 }
 document.querySelectorAll(".nav a[data-page]").forEach(a => a.onclick = () => show(a.dataset.page));
@@ -294,7 +326,16 @@ async function refresh(){
   try { renderStatus(await api.status()); } catch (e) { console.error(e); }
 }
 
+// New players get the step-by-step guide; once a key is saved it goes away and the short 0.6.18 line comes back.
+let keySaved = false;
+function showGuide(on){
+  $("guide").hidden = !on; $("guide").open = on;
+  $("key-link").hidden = on; $("key-short").hidden = on;
+}
+
 function fillSetup(info){
+  keySaved = !!(info.client_id && info.has_secret);
+  showGuide(!keySaved);
   $("cid").value = info.client_id || "";
   hasSecret = info.has_secret;
   $("sec").placeholder = hasSecret ? "Saved (leave empty to keep it)" : "Paste the Client Secret";
@@ -309,7 +350,12 @@ async function checkFolder(){
 }
 $("wow").addEventListener("input", () => { clearTimeout(folderTimer); folderTimer = setTimeout(checkFolder, 400); });
 $("eye").onclick = () => { const s = $("sec"); s.type = s.type === "password" ? "text" : "password"; $("eye").textContent = s.type === "password" ? "Show" : "Hide"; };
-$("key-page").onclick = () => api.open_key_page();
+$("key-page").onclick = $("key-link").onclick = () => api.open_key_page();
+$("guide-open").onclick = () => showGuide(true);          // reopen it any time; it hides again on the next visit
+document.querySelectorAll(".copy").forEach(b => b.onclick = async () => {
+  const ok = await api.copy_text($(b.dataset.copy).textContent);
+  b.textContent = ok ? "Copied ✓" : "Copy failed"; setTimeout(() => b.textContent = "Copy", 1600);
+});
 $("startup").onclick = () => api.open_startup_settings();
 $("browse").onclick = async () => {
   const path = await api.browse($("wow").value);
@@ -327,7 +373,7 @@ $("save").onclick = async () => {
     $("save-hint").hidden = true;
     badge($("save-badge"), r.ok ? "good" : "bad", r.ok ? "Saved. Watching for lookups." : r.text);
     if (r.wow) { badge($("wow-badge"), r.wow.level, r.wow.text); if (r.ok) $("wow").value = r.wow.path; }
-    if (r.ok) { $("sec").value = ""; hasSecret = true; $("sec").placeholder = "Saved (leave empty to keep it)"; refresh(); }
+    if (r.ok) { $("sec").value = ""; hasSecret = true; $("sec").placeholder = "Saved (leave empty to keep it)"; keySaved = true; showGuide(false); refresh(); }
   } finally { $("save").disabled = false; }
 };
 

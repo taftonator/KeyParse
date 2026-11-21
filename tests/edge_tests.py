@@ -816,7 +816,7 @@ def _():
     except ValueError:
         bad_refused = True
     ver_ok = b.msix_version("0.6.13") == "0.6.13.0" and b.msix_version("1") == "1.0.0.0" and bad_refused
-    toc_ok = b.toc_version() == "0.6.18"
+    toc_ok = b.toc_version() == "0.6.19"
     out = TMP / 't48'
     if out.exists():
         shutil.rmtree(out)
@@ -1186,6 +1186,57 @@ def _():
     importlib.reload(c)
     ok = state_ok and link_ok and page_ok and url_ok and running
     return ok, f"state={state_ok} {off['state']} link={link_ok} {on['recent'][0].get('wcl')} page={page_ok} {called - offered} url={url_ok} running={running}"
+
+@case("55. Setup key guide: step-by-step with Copy buttons; swapped / doubled / spaced codes are caught in plain words before Warcraft Logs")
+def _():
+    import importlib, json as _json
+    wow = new_wow(TMP / 't55')
+    c, cfg, api = companion(wow, FakeWCL({}), TMP / 't55')
+    ID, SEC = "01a1ebfa-a540-71dc-bc35-8fd72bad6416", "x" * 40
+    swapped = c.key_problem(SEC, ID)
+    checks_ok = (c.key_problem(ID, SEC) == "" and "swapped" in swapped and "Client ID (left box)" in swapped
+                 and "same code" in c.key_problem(ID, ID) and "space" in c.key_problem(ID, "abc def" + "x" * 30)
+                 and "both" in c.key_problem("", SEC) and c.clean_key(' "' + ID + '" \n') == ID)
+    cfgfile = TMP / 't55' / 'config.json'
+    shared = {}
+    refused = c.save_setup(shared, SEC, ID, str(wow), path=cfgfile)
+    pasted = c.save_setup(shared, "  " + ID + "\n", '"' + SEC + '"', str(wow), path=cfgfile)
+    save_ok = (not refused["ok"] and "swapped" in refused["text"] and pasted["ok"]
+               and _json.loads(cfgfile.read_text(encoding='utf-8'))["client_id"] == ID and shared["client_secret"] == SEC)
+    class R:
+        def __init__(s, code, body): s.status_code, s._b, s.text = code, body, _json.dumps(body)
+        def json(s): return s._b
+        def raise_for_status(s): pass
+    asked = []
+    def fake_post(url, **kw):
+        asked.append(url)
+        return R(401, {}) if "oauth" in url else R(200, {"data": {}})
+    c.requests.post = fake_post
+    t_swap = c.test_key(SEC, ID)
+    no_call = asked == []                                   # a sure mistake never bothers Warcraft Logs
+    t_badid = c.test_key("my-client", SEC)
+    t_bad = c.test_key(ID, SEC)
+    key_ok = (no_call and "swapped" in t_swap["text"] and "short code with dashes" in t_badid["text"]
+              and "Delete that client" in t_bad["text"] and not t_bad["ok"])
+    import companion_ui as ui
+    importlib.reload(ui)
+    got = []
+    ui.set_clipboard = lambda text: got.append(text) or True   # never the real clipboard in tests
+    copied = ui.JsApi(None).copy_text("http://localhost")
+    copy_ok = copied is True and got == ["http://localhost"]
+    html = (ui.UI_DIR / "index.html").read_text(encoding="utf-8")
+    page_ok = ('id="guide"' in html and 'data-copy="g-name"' in html and 'data-copy="g-url"' in html
+               and ">http://localhost</code>" in html and "+ Create Client" in html and "Copy the secret right away" in html
+               and "api.copy_text(" in html and 'id="key-link" hidden' in html and 'id="key-short" hidden' in html
+               and "showGuide(!keySaved)" in html and "showGuide(false); refresh();" in html
+               and 'id="guide-open"' in html and 'onclick = () => showGuide(true)' in html
+               and 'if (page === "setup" && keySaved) showGuide(false)' in html)
+    docs = (Path(__file__).resolve().parents[1] / 'INSTALL.md').read_text(encoding='utf-8')
+    docs_ok = "+ Create Client" in docs and "http://localhost" in docs and "shown only once" in docs and "press Enter" not in docs
+    importlib.reload(c)
+    ok = checks_ok and save_ok and key_ok and copy_ok and page_ok and docs_ok
+    return ok, (f"checks={checks_ok} save={save_ok} {refused} {pasted} key={key_ok} {t_swap} {t_badid} {t_bad} asked={asked} "
+                f"copy={copy_ok} page={page_ok} docs={docs_ok}")
 
 print()
 w = max(len(t) for t, _, _ in results)

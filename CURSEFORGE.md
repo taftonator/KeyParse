@@ -36,8 +36,15 @@ WoW addons can't access the internet, so KeyParse needs a small free companion a
 
 1. Install this addon. Make sure all four KeyParse entries are enabled in the AddOns list (KeyParse plus three small data addons).
 2. Get **M+ KeyParse Companion** from the Microsoft Store: https://apps.microsoft.com/detail/9NZ96JDM66PT
-3. The first time, it asks for a Warcraft Logs API key. Create one free at warcraftlogs.com/api/clients (any name, redirect URL `http://localhost`, leave "Public Client" unchecked) and paste the Client ID and Secret.
-4. It starts with Windows from then on, so lookups are ready when you play.
+3. Open it. The first time, it shows its **Setup** page and asks for a free Warcraft Logs API key. To make one:
+   - Click **Get a free key at warcraftlogs.com** on the Setup page (or go to warcraftlogs.com/api/clients) and sign in to Warcraft Logs (a free account).
+   - Click **Create Client** and fill in:
+     - **Name:** something descriptive, e.g. `M+ KeyParse Companion - looks up Mythic+ parses for my WoW group finder` (Warcraft Logs may cancel keys with unclear names).
+     - **Redirect URLs:** `http://localhost` (not used, but the box can't be empty).
+     - **Public Client:** leave it **unticked**.
+   - Click **Create**, then copy the **Client ID** (short, with dashes) into the left box and the **Client Secret** (long, no dashes) into the right box. Copy the secret right away: it's shown only once (lost it? delete the client and make a new one).
+   - Press **Test key** (it should say "Key works"), check your WoW folder, and press **Save**.
+4. It starts with Windows from then on and sits in your tray, so lookups are ready when you play.
 
 ## Commands
 
